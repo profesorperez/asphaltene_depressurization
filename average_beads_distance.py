@@ -115,6 +115,64 @@ def distance(r1, r2, L):
 
   return(np.linalg.norm(minr))
 
+def unwrap(rf, rt, L):
+  """
+  Unwrap coordinates of test particle (rt) in periodic boxes
+
+  Parameters
+  ----------
+  rf : array
+    Vector with coordinates of fixed particle
+  rt : array
+    Vector with coordinates of test particle
+  L : array
+    Vector with box dimensions
+
+  Returns
+  -------
+  ru : array
+    Vector with unwrapped coordinates of test particle
+
+  """
+
+  dr = rt - rf
+  dR = L - abs(dr)
+
+  unwr=[]
+  for i in range(3):
+    if abs(dr[i]) < dR[i]:
+      unwr.append(rt[i])
+    else:
+      if dr[i] < 0:
+        unwr.append(rt[i] + L[i])
+      else:
+        unwr.append(rt[i] - L[i])
+
+  return(np.array(unwr))
+
+def angle_between(v1, v2):
+  """
+  Returns the angle in degrees between vectors v1 and v2
+    
+  Parameters
+  ----------
+  v1 : array
+    Vector
+  v2 : array
+    Vector
+  
+  Returns
+  -------
+  q : scalar
+    Angle (in degrees) between vectors v1 and v2
+    
+  """
+  
+  v1_norm = np.linalg.norm(v1)
+  v2_norm = np.linalg.norm(v2)
+  
+  return np.arccos(np.dot(v1, v2)/(v1_norm*v2_norm))*180./np.pi
+
 #%% Reference values for bonds and angles
 
 reference_bond = {1 : 3.37698,\
@@ -254,13 +312,18 @@ for p in pressure[-1:]:
     # Box dimensions at current timestep
     L = box[it][:,1] - box[it][:,0]
 
-    
     for i in molecules.keys():
+      # Find the indices that would sort the beads in molecule by id
+      idx = []
+      for line in molecules[i]:
+        idx.append(line[iid])
+      index = np.argsort(idx)
+      
       # Bond deformation
       stretch = []
       for t, b1, b2 in bonds:
-        p1 = molecules[i][b1-1][[ix, iy, iz]]
-        p2 = molecules[i][b2-1][[ix, iy, iz]]
+        p1 = molecules[i][index[b1-1]][[ix, iy, iz]]
+        p2 = molecules[i][index[b2-1]][[ix, iy, iz]]
         d12 = distance(p1, p2, L)
         stretch.append(d12 - reference_bond[t])
       stretch_vec[ip, it, i-1, :] = stretch
@@ -268,9 +331,9 @@ for p in pressure[-1:]:
       # Angle deformation
       bend = []
       for t, b1, b2, b3 in angles:
-        p1 = molecules[i][b1-1][[ix, iy, iz]]
-        p2 = molecules[i][b2-1][[ix, iy, iz]]
-        p3 = molecules[i][b3-1][[ix, iy, iz]]
-        d12 = distance(p1, p2, L)
-        bend.append(d12 - reference_angle[t])
+        pvertex = molecules[i][index[b2-1]][[ix, iy, iz]]
+        p1 = unwrap(pvertex, molecules[i][index[b1-1]][[ix, iy, iz]], L)
+        p3 = unwrap(pvertex, molecules[i][index[b3-1]][[ix, iy, iz]], L)
+        q123 = angle_between(p1 - pvertex, p2 - pvertex)
+        bend.append(q123 - reference_angle[t])
       bend_vec[ip, it, i-1, :] = bend
