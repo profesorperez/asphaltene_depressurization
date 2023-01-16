@@ -263,15 +263,15 @@ angles = np.array(
   
 #%% Main
 
-# Get data
+# Get data and calculate stretching and bending
 
-path = './test_data/'
+path = './'
 # pressure = [50, 75, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 300, 400, 700]
 pressure = [400, 700]
-npress = len(pressure)
+Npress = len(pressure)
 
-for ip in range(npress):
-  file_in = path + str(pressure[ip]) + '_atm/clusters.dat'
+for ip in range(Npress):
+  file_in = path + 'test_data/' + str(pressure[ip]) + '_atm/clusters.dat'
   labels, box, data = read_dump_file(file_in)
   Ntimesteps, Nparticles, Nlabels = data.shape
   
@@ -306,8 +306,8 @@ for ip in range(npress):
       # Number of beads per molecule
       npm = int(Nparticles/Nmolecules)
       # Need to store deformations
-      stretch_vec = np.zeros((npress, Ntimesteps, Nmolecules, len(bonds)))
-      bend_vec = np.zeros((npress, Ntimesteps, Nmolecules, len(angles)))
+      stretch_vec = np.zeros((Npress, Ntimesteps, Nmolecules, len(bonds)))
+      bend_vec = np.zeros((Npress, Ntimesteps, Nmolecules, len(angles)))
       
     # Box dimensions at current timestep
     L = box[it][:,1] - box[it][:,0]
@@ -337,3 +337,33 @@ for ip in range(npress):
         q123 = angle_between(p1 - pvertex, p2 - pvertex)
         bend.append(q123 - reference_angle[t])
       bend_vec[ip, it, i-1, :] = bend
+
+#%% Time averages
+
+## Dimensions:
+## stretch_avg : (Npress, Nmolecules, Nbonds)
+## bend_avg    : (Npress, Nmolecules, Nangles)
+
+stretch_avg = np.mean(stretch_vec, axis=1)
+bend_avg = np.mean(bend_vec, axis=1)
+
+#%% Time+per molecule averages
+
+## Dimensions:
+## stretch_ptm : (Npress, Nmolecules)
+## bend_ptm    : (Npress, Nmolecules)
+
+stretch_ptm = np.mean(stretch_avg, axis=-1)
+bend_ptm = np.mean(bend_avg, axis=-1)
+
+#%% Save data
+
+np.savetxt('../analysis/stretch_average_ptm',\
+           np.hstack((np.array(pressure).reshape((-1,1)), stretch_ptm)),\
+           fmt='%.5e', delimiter=' ', newline='\n', header='Stretch average per molecule',\
+           footer='', comments='# ', encoding=None)
+  
+np.savetxt('../analysis/bend_average_ptm',\
+           np.hstack((np.array(pressure).reshape((-1,1)), bend_ptm)),\
+           fmt='%.5e', delimiter=' ', newline='\n', header='Bend average per molecule',\
+           footer='', comments='# ', encoding=None)
