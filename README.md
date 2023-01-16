@@ -1,6 +1,6 @@
 # Asphaltene depressurization
 
-This folder contains the codes in Python (.py and .ipynb) used to post-process and analyze the results from CG MD simualtions of a PVT depressurization
+This folder contains the codes in Python (.ipynb) used to post-process and analyze the results from CG MD simualtions of a PVT depressurization
 process.
 
 ## The system
