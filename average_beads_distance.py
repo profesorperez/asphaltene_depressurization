@@ -265,13 +265,14 @@ angles = np.array(
 
 # Get data
 
-path = '../data/'
-pressure = [50, 75, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 300, 400, 700]
+path = './test_data/'
+# pressure = [50, 75, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 300, 400, 700]
+pressure = [400, 700]
 npress = len(pressure)
 
 ip = 0
 for p in pressure[-1:]:
-  file_in = path + str(p) + '_atm/5-production_npt/clusters.dat'
+  file_in = path + str(p) + '_atm/clusters.dat'
   labels, box, data = read_dump_file(file_in)
   Ntimesteps, Nparticles, Nlabels = data.shape
   
