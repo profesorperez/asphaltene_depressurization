@@ -270,9 +270,8 @@ path = './test_data/'
 pressure = [400, 700]
 npress = len(pressure)
 
-ip = 0
-for p in pressure[-1:]:
-  file_in = path + str(p) + '_atm/clusters.dat'
+for ip in range(npress):
+  file_in = path + str(pressure[ip]) + '_atm/clusters.dat'
   labels, box, data = read_dump_file(file_in)
   Ntimesteps, Nparticles, Nlabels = data.shape
   
@@ -303,7 +302,7 @@ for p in pressure[-1:]:
     # Number of molecules
     Nmolecules = len(molecules)
     
-    if it == 0:
+    if ip == 0 and it == 0:
       # Number of beads per molecule
       npm = int(Nparticles/Nmolecules)
       # Need to store deformations
